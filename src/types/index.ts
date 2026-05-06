@@ -29,6 +29,8 @@ export interface FileItem {
   modifiedAt: Date
   icon: string
   path: string
+  url?: string
+  isUploaded?: boolean
 }
 
 export interface AppInfo {
@@ -36,7 +38,7 @@ export interface AppInfo {
   name: string
   icon: string
   description: string
-  category: 'system' | 'utility' | 'productivity'
+  category: 'system' | 'utility' | 'productivity' | 'media'
 }
 
 export interface TaskbarItem {

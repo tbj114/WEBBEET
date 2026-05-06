@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react'
-import { LayoutGrid, Wifi, Volume2, Battery, Clock } from 'lucide-react'
+import { Wifi, Volume2, Battery, Search, ChevronUp } from 'lucide-react'
 import { useDesktopStore } from '@/store/desktopStore'
 import { StartMenu } from '../StartMenu/StartMenu'
 
 export function Taskbar() {
   const { windows, activeWindowId, minimizeWindow, setStartMenuOpen, startMenuOpen, systemTrayItems } = useDesktopStore()
   const [time, setTime] = useState(new Date())
+  const [showSearch, setShowSearch] = useState(false)
 
   useEffect(() => {
     const timer = setInterval(() => setTime(new Date()), 1000)
@@ -32,63 +33,81 @@ export function Taskbar() {
   }
 
   const formatDate = (date: Date) => {
-    return date.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric', weekday: 'short' })
+    return date.toLocaleDateString('zh-CN', { weekday: 'short', month: 'short', day: 'numeric' })
   }
 
   return (
     <>
-      <div className="fixed bottom-0 left-0 right-0 h-12 bg-taskbar-bg flex items-center px-2 z-50">
-        <button
-          onClick={handleStartClick}
-          className="h-10 w-10 bg-windows-blue hover:bg-windows-blue-dark flex items-center justify-center rounded mr-2 transition-colors"
-        >
-          <LayoutGrid className="text-white" size={20} />
-        </button>
+      <div className="fixed bottom-0 left-0 right-0 h-14 bg-white/80 backdrop-blur-xl border-t border-gray-200/50 flex items-center justify-center z-50">
+        <div className="absolute left-4 flex items-center gap-1">
+          <button
+            onClick={handleStartClick}
+            className={`h-10 w-10 flex items-center justify-center rounded-xl transition-all duration-300 ${
+              startMenuOpen 
+                ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/30' 
+                : 'hover:bg-gray-100'
+            }`}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="text-gray-700">
+              <path d="M3 3h8v8H3V3zm10 0h8v8h-8V3zM3 13h8v8H3v-8zm10 0h8v8h-8v-8z" fill="currentColor"/>
+            </svg>
+          </button>
+          
+          <button
+            onClick={() => setShowSearch(!showSearch)}
+            className="h-10 w-10 flex items-center justify-center rounded-xl hover:bg-gray-100 transition-colors"
+          >
+            <Search size={18} className="text-gray-600" />
+          </button>
+        </div>
 
-        <div className="flex-1 flex items-center gap-1 overflow-x-auto">
-          {windows.map((window) => (
+        <div className="flex items-center gap-1 px-2">
+          {windows.slice(0, 5).map((window) => (
             <button
               key={window.id}
               onClick={() => handleWindowClick(window.id)}
-              className={`h-10 px-3 flex items-center gap-2 rounded transition-colors min-w-[120px] ${
+              className={`h-10 px-3 flex items-center gap-2 rounded-xl transition-all duration-200 ${
                 activeWindowId === window.id
-                  ? 'bg-windows-blue text-white'
-                  : 'text-white/80 hover:bg-white/10'
+                  ? 'bg-gray-100'
+                  : 'hover:bg-gray-50'
               }`}
             >
-              <span className="text-lg">
+              <span className="text-xl">
                 {window.appId === 'explorer' ? '📁' :
                  window.appId === 'notepad' ? '📝' :
                  window.appId === 'calculator' ? '🧮' :
-                 window.appId === 'terminal' ? '💻' : '⚙️'}
+                 window.appId === 'terminal' ? '💻' :
+                 window.appId === 'settings' ? '⚙️' :
+                 window.appId === 'browser' ? '🌐' :
+                 window.appId === 'music' ? '🎵' : '📄'}
               </span>
-              <span className="text-sm truncate">{window.title}</span>
             </button>
           ))}
         </div>
 
-        <div className="flex items-center gap-3 px-2">
-          <div className="flex items-center gap-2">
-            {systemTrayItems.map((item) => (
+        <div className="absolute right-4 flex items-center gap-2">
+          <div className="flex items-center gap-1">
+            {systemTrayItems.slice(0, 3).map((item) => (
               <button
                 key={item.id}
-                className="w-8 h-8 flex items-center justify-center text-white/70 hover:text-white hover:bg-white/10 rounded transition-colors"
+                className="h-9 px-2 flex items-center justify-center hover:bg-gray-100 rounded-lg transition-colors"
                 title={item.tooltip}
               >
-                {item.icon === 'Wifi' && <Wifi size={16} />}
-                {item.icon === 'Volume2' && <Volume2 size={16} />}
-                {item.icon === 'Battery' && <Battery size={16} />}
+                {item.icon === 'Wifi' && <Wifi size={16} className="text-gray-600" />}
+                {item.icon === 'Volume2' && <Volume2 size={16} className="text-gray-600" />}
+                {item.icon === 'Battery' && <Battery size={16} className="text-gray-600" />}
               </button>
             ))}
           </div>
 
-          <div className="text-white/80 text-right">
-            <div className="flex items-center gap-1">
-              <Clock size={14} />
-              <span className="text-sm font-medium">{formatTime(time)}</span>
-            </div>
-            <span className="text-xs">{formatDate(time)}</span>
-          </div>
+          <button className="h-10 px-4 flex flex-col items-end justify-center rounded-xl hover:bg-gray-100 transition-colors">
+            <span className="text-xs font-medium text-gray-700">{formatTime(time)}</span>
+            <span className="text-[10px] text-gray-500">{formatDate(time)}</span>
+          </button>
+
+          <button className="h-10 w-10 flex items-center justify-center hover:bg-gray-100 rounded-xl transition-colors group">
+            <ChevronUp size={16} className="text-gray-500 group-hover:text-gray-700" />
+          </button>
         </div>
       </div>
 
