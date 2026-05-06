@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import { Minus, Square, X, Maximize2 } from 'lucide-react'
 import { useDesktopStore } from '@/store/desktopStore'
 import type { WindowState } from '@/types'
+import { getIconByName } from '@/utils/icons'
 
 interface WindowProps {
   window: WindowState
@@ -218,10 +219,13 @@ function ExplorerApp() {
   const handleDoubleClick = (file: typeof fileSystem[0]) => {
     if (file.type === 'folder') {
       setCurrentPath(file.path)
-      openWindow('explorer', file.name)
     } else {
       openWindow('notepad', file.name)
     }
+  }
+
+  const getFileIcon = (iconName: string) => {
+    return getIconByName(iconName, 48)
   }
 
   return (
@@ -250,12 +254,8 @@ function ExplorerApp() {
                   : 'hover:bg-gray-100'
               }`}
             >
-              <span className="text-5xl mb-2">
-                {item.type === 'folder' ? '📁' : 
-                 item.icon === 'Image' ? '🖼️' : 
-                 item.icon === 'Music' ? '🎵' : '📄'}
-              </span>
-              <span className="text-sm text-center font-medium text-gray-700 truncate max-w-full">{item.name}</span>
+              {getFileIcon(item.icon)}
+              <span className="text-sm text-center font-medium text-gray-700 truncate max-w-full mt-2">{item.name}</span>
               <span className="text-xs text-gray-400 mt-1">
                 {item.size ? `${(item.size / 1024).toFixed(1)} KB` : item.type}
               </span>
@@ -264,23 +264,57 @@ function ExplorerApp() {
         </div>
       </div>
       <div className="h-8 bg-gray-50 border-t flex items-center px-4 text-xs text-gray-500">
-        {fileSystem.length} 个项目
+        {fileSystem.length} 个项目 | 当前路径: {currentPath}
       </div>
     </div>
   )
 }
 
 function NotepadApp() {
+  const { fileSystem } = useDesktopStore()
   const [content, setContent] = useState('欢迎使用记事本\n\n双击文件可以在此打开编辑')
+  const [currentFile, setCurrentFile] = useState<string | null>(null)
+  const [saved, setSaved] = useState(true)
+
+  useEffect(() => {
+    const handleFileOpen = () => {
+      const selectedFile = fileSystem.find(f => f.type === 'file' && !f.isUploaded)
+      if (selectedFile && selectedFile.name !== currentFile) {
+        setCurrentFile(selectedFile.name)
+        if (selectedFile.url) {
+          fetch(selectedFile.url)
+            .then(res => res.text())
+            .then(text => setContent(text))
+            .catch(() => setContent(`文件名: ${selectedFile.name}\n路径: ${selectedFile.path}\n大小: ${selectedFile.size} bytes`))
+        } else {
+          const savedContent = localStorage.getItem(`notepad-${selectedFile.name}`)
+          setContent(savedContent || `这是文件: ${selectedFile.name}\n\n在此输入内容...`)
+        }
+        setSaved(true)
+      }
+    }
+    
+    const interval = setInterval(handleFileOpen, 100)
+    return () => clearInterval(interval)
+  }, [fileSystem, currentFile])
 
   const handleSave = () => {
-    localStorage.setItem('notepad-content', content)
+    if (currentFile) {
+      localStorage.setItem(`notepad-${currentFile}`, content)
+    } else {
+      localStorage.setItem('notepad-content', content)
+    }
+    setSaved(true)
   }
 
   return (
     <div className="h-full flex flex-col">
       <div className="h-10 bg-gray-50 flex items-center justify-between px-4 border-b">
-        <span className="text-sm text-gray-600">未保存</span>
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-gray-600">{currentFile || '未命名'}</span>
+          {!saved && <span className="text-xs text-orange-500">● 未保存</span>}
+          {saved && currentFile && <span className="text-xs text-green-500">✓ 已保存</span>}
+        </div>
         <button
           onClick={handleSave}
           className="px-4 py-1 bg-blue-500 text-white rounded-lg text-sm hover:bg-blue-600 transition-colors"
@@ -293,6 +327,7 @@ function NotepadApp() {
         value={content}
         onChange={(e) => {
           setContent(e.target.value)
+          setSaved(false)
         }}
         placeholder="在这里输入文字..."
       />

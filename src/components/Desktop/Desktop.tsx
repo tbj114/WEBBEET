@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useState, useRef } from 'react'
 import { useDesktopStore } from '@/store/desktopStore'
 import { Window } from '../Window/Window'
 import { DesktopIcon } from './DesktopIcon'
@@ -19,9 +19,72 @@ export function Desktop() {
     wallpaperMode,
     showPersonalization,
     addUploadedFile,
+    clearSelectedIcons,
+    boxSelectionStart,
+    boxSelectionEnd,
+    setBoxSelectionStart,
+    setBoxSelectionEnd,
+    setSelectedIcons,
   } = useDesktopStore()
 
   const [isDraggingOver, setIsDraggingOver] = useState(false)
+  const desktopRef = useRef<HTMLDivElement>(null)
+
+  const handleDesktopMouseDown = useCallback((e: React.MouseEvent) => {
+    if (e.button === 0) {
+      const target = e.target as HTMLElement
+      if (target.classList.contains('desktop-area') || target === desktopRef.current) {
+        clearSelectedIcons()
+        setContextMenu(false)
+        setStartMenuOpen(false)
+        setBoxSelectionStart({ x: e.clientX, y: e.clientY })
+        setBoxSelectionEnd({ x: e.clientX, y: e.clientY })
+      }
+    }
+  }, [clearSelectedIcons, setContextMenu, setStartMenuOpen, setBoxSelectionStart, setBoxSelectionEnd])
+
+  const handleDesktopMouseMove = useCallback((e: React.MouseEvent) => {
+    if (boxSelectionStart) {
+      setBoxSelectionEnd({ x: e.clientX, y: e.clientY })
+      
+      const desktopArea = desktopRef.current
+      if (desktopArea) {
+        const rect = desktopArea.getBoundingClientRect()
+        const minX = Math.min(boxSelectionStart.x - rect.left, e.clientX - rect.left)
+        const maxX = Math.max(boxSelectionStart.x - rect.left, e.clientX - rect.left)
+        const minY = Math.min(boxSelectionStart.y - rect.top - 48, e.clientY - rect.top - 48)
+        const maxY = Math.max(boxSelectionStart.y - rect.top - 48, e.clientY - rect.top - 48)
+        
+        const selectedIds: string[] = []
+        desktopIcons.forEach((icon) => {
+          const iconX = icon.x
+          const iconY = icon.y
+          const iconW = 64
+          const iconH = 80
+          
+          if (
+            iconX < maxX &&
+            iconX + iconW > minX &&
+            iconY < maxY &&
+            iconY + iconH > minY
+          ) {
+            selectedIds.push(icon.id)
+          }
+        })
+        
+        if (selectedIds.length > 0) {
+          setSelectedIcons(selectedIds)
+        }
+      }
+    }
+  }, [boxSelectionStart, desktopIcons, setBoxSelectionEnd, setSelectedIcons])
+
+  const handleDesktopMouseUp = useCallback(() => {
+    if (boxSelectionStart) {
+      setBoxSelectionStart(null)
+      setBoxSelectionEnd(null)
+    }
+  }, [boxSelectionStart, setBoxSelectionStart, setBoxSelectionEnd])
 
   const handleDesktopContextMenu = useCallback((e: React.MouseEvent) => {
     e.preventDefault()
@@ -31,7 +94,8 @@ export function Desktop() {
   }, [setContextMenu, setStartMenuOpen])
 
   const handleDesktopClick = useCallback((e: React.MouseEvent) => {
-    if (e.target === e.currentTarget || (e.target as HTMLElement).closest('.desktop-area')) {
+    const target = e.target as HTMLElement
+    if (target.classList.contains('desktop-area') || target === desktopRef.current) {
       if (e.button === 0) {
         setContextMenu(false)
         setStartMenuOpen(false)
@@ -121,11 +185,38 @@ export function Desktop() {
     }
   }
 
+  const getBoxSelectionStyle = () => {
+    if (!boxSelectionStart || !boxSelectionEnd) return null
+    
+    const desktopArea = desktopRef.current
+    if (!desktopArea) return null
+    
+    const rect = desktopArea.getBoundingClientRect()
+    const left = Math.min(boxSelectionStart.x - rect.left, boxSelectionEnd.x - rect.left)
+    const top = Math.min(boxSelectionStart.y - rect.top - 48, boxSelectionEnd.y - rect.top - 48)
+    const width = Math.abs(boxSelectionEnd.x - boxSelectionStart.x)
+    const height = Math.abs(boxSelectionEnd.y - boxSelectionStart.y)
+    
+    return {
+      left,
+      top,
+      width,
+      height,
+    }
+  }
+
+  const boxSelectionStyle = getBoxSelectionStyle()
+
   return (
     <div
+      ref={desktopRef}
       className="w-full h-full relative overflow-hidden"
       style={getBackgroundStyle()}
       onClick={handleDesktopClick}
+      onMouseDown={handleDesktopMouseDown}
+      onMouseMove={handleDesktopMouseMove}
+      onMouseUp={handleDesktopMouseUp}
+      onMouseLeave={handleDesktopMouseUp}
       onContextMenu={handleDesktopContextMenu}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
@@ -146,6 +237,13 @@ export function Desktop() {
             }}
           />
         ))}
+        
+        {boxSelectionStyle && (
+          <div
+            className="absolute border-2 border-blue-500 bg-blue-500/10 pointer-events-none z-50"
+            style={boxSelectionStyle}
+          />
+        )}
       </div>
 
       {windows.map((window) => (

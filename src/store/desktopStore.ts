@@ -16,6 +16,10 @@ interface DesktopStore {
   wallpaperMode: 'cover' | 'fill' | 'center' | 'tile' | 'stretch'
   showPersonalization: boolean
   theme: 'light' | 'dark' | 'blue' | 'purple' | 'red' | 'green' | 'orange' | 'teal'
+  selectedIcons: string[]
+  boxSelectionStart: { x: number; y: number } | null
+  boxSelectionEnd: { x: number; y: number } | null
+  currentPath: string[]
 
   openWindow: (appId: string, title: string) => void
   closeWindow: (windowId: string) => void
@@ -29,12 +33,20 @@ interface DesktopStore {
   setContextMenu: (open: boolean, position?: { x: number; y: number }) => void
   addDesktopIcon: (icon: Omit<DesktopIcon, 'id'>) => void
   removeDesktopIcon: (iconId: string) => void
+  removeSelectedIcons: () => void
   updateDesktopIconPosition: (iconId: string, x: number, y: number) => void
   setWallpaperUrl: (url: string | null) => void
   setWallpaperMode: (mode: 'cover' | 'fill' | 'center' | 'tile' | 'stretch') => void
   setShowPersonalization: (show: boolean) => void
   setTheme: (theme: 'light' | 'dark' | 'blue' | 'purple' | 'red' | 'green' | 'orange' | 'teal') => void
   addUploadedFile: (file: FileItem) => void
+  setSelectedIcons: (ids: string[]) => void
+  clearSelectedIcons: () => void
+  addToSelectedIcons: (id: string) => void
+  setBoxSelectionStart: (pos: { x: number; y: number } | null) => void
+  setBoxSelectionEnd: (pos: { x: number; y: number } | null) => void
+  navigateTo: (path: string[]) => void
+  executeCommand: (cmd: string) => string
 }
 
 const defaultApps: AppInfo[] = [
@@ -86,6 +98,10 @@ export const useDesktopStore = create<DesktopStore>((set, get) => ({
   wallpaperMode: 'fill',
   showPersonalization: false,
   theme: 'blue',
+  selectedIcons: [],
+  boxSelectionStart: null,
+  boxSelectionEnd: null,
+  currentPath: ['/'],
 
   openWindow: (appId: string, title: string) => {
     const { windows, nextZIndex } = get()
@@ -238,5 +254,118 @@ export const useDesktopStore = create<DesktopStore>((set, get) => ({
     set(state => ({
       fileSystem: [file, ...state.fileSystem],
     }))
+  },
+
+  setSelectedIcons: (ids) => {
+    set({ selectedIcons: ids })
+  },
+
+  clearSelectedIcons: () => {
+    set({ selectedIcons: [] })
+  },
+
+  addToSelectedIcons: (id) => {
+    set(state => ({
+      selectedIcons: [...state.selectedIcons, id],
+    }))
+  },
+
+  removeSelectedIcons: () => {
+    set(state => ({
+      desktopIcons: state.desktopIcons.filter(i => !state.selectedIcons.includes(i.id)),
+      selectedIcons: [],
+    }))
+  },
+
+  setBoxSelectionStart: (pos) => {
+    set({ boxSelectionStart: pos })
+  },
+
+  setBoxSelectionEnd: (pos) => {
+    set({ boxSelectionEnd: pos })
+  },
+
+  navigateTo: (path) => {
+    set({ currentPath: path })
+  },
+
+  executeCommand: (cmd) => {
+    const args = cmd.trim().split(' ')
+    const command = args[0]
+    const params = args.slice(1)
+
+    switch (command) {
+      case 'ls':
+        return get().fileSystem.map(f => f.name).join('  ')
+      case 'pwd':
+        return get().currentPath.join('/')
+      case 'cd':
+        if (params[0] === '..') {
+          const newPath = get().currentPath.slice(0, -1)
+          set({ currentPath: newPath.length ? newPath : ['/'] })
+          return ''
+        } else if (params[0]) {
+          set({ currentPath: [...get().currentPath, params[0]] })
+          return ''
+        }
+        return ''
+      case 'cat':
+        if (params[0]) {
+          const file = get().fileSystem.find(f => f.name === params[0])
+          return file?.url ? `File: ${file.name}\nPath: ${file.path}\nSize: ${file.size} bytes` : `cat: ${params[0]}: No such file`
+        }
+        return 'cat: missing file operand'
+      case 'rm':
+        if (params[0]) {
+          set(state => ({
+            desktopIcons: state.desktopIcons.filter(i => i.name !== params[0]),
+          }))
+          return ''
+        }
+        return 'rm: missing file operand'
+      case 'mkdir':
+        if (params[0]) {
+          const newIcon: DesktopIcon = {
+            id: `icon-${Date.now()}`,
+            name: params[0],
+            appId: 'explorer',
+            icon: 'FolderOpen',
+            x: 100 + Math.random() * 200,
+            y: 100 + Math.random() * 200,
+          }
+          set(state => ({ desktopIcons: [...state.desktopIcons, newIcon] }))
+          return ''
+        }
+        return 'mkdir: missing directory name'
+      case 'touch':
+        if (params[0]) {
+          const newFile: DesktopIcon = {
+            id: `icon-${Date.now()}`,
+            name: params[0],
+            appId: 'notepad',
+            icon: 'FileText',
+            x: 100 + Math.random() * 200,
+            y: 100 + Math.random() * 200,
+          }
+          set(state => ({ desktopIcons: [...state.desktopIcons, newFile] }))
+          return ''
+        }
+        return 'touch: missing file name'
+      case 'clear':
+        return 'CLEAR'
+      case 'help':
+        return `Available commands:
+  ls          - List files
+  pwd         - Print working directory
+  cd <dir>    - Change directory
+  cat <file>  - Display file content
+  rm <name>   - Remove file
+  mkdir <dir> - Create directory
+  touch <file>- Create file
+  clear       - Clear screen
+  help        - Show this help`
+      default:
+        return `${command}: command not found`
+    }
   },
 }))
