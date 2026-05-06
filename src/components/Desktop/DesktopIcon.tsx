@@ -51,7 +51,7 @@ export function DesktopIcon({ icon, onDoubleClick, onContextMenu }: DesktopIconP
     >
       <div className={`w-16 h-16 flex items-center justify-center rounded-xl transition-all duration-150 ${
         isSelected 
-          ? 'bg-blue-500/30 ring-2 ring-blue-400 shadow-lg' 
+          ? 'bg-blue-500/30 shadow-lg' 
           : 'bg-white/15 hover:bg-white/25'
       }`}>
         {getIconByName(icon.icon, 48)}
