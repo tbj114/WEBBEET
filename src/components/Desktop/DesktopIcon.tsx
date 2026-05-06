@@ -28,13 +28,9 @@ export function DesktopIcon({ icon, onDoubleClick, onContextMenu }: DesktopIconP
     }
   }
 
-  const getIconComponent = () => {
-    return getIconByName(icon.icon, 48)
-  }
-
   return (
     <div
-      className={`absolute flex flex-col items-center cursor-pointer select-none group transition-all duration-150 ${
+      className={`absolute flex flex-col items-center cursor-pointer select-none transition-all duration-150 ${
         isSelected ? 'scale-105' : ''
       }`}
       style={{ left: icon.x, top: icon.y }}
@@ -56,14 +52,14 @@ export function DesktopIcon({ icon, onDoubleClick, onContextMenu }: DesktopIconP
       <div className={`w-16 h-16 flex items-center justify-center rounded-xl transition-all duration-150 ${
         isSelected 
           ? 'bg-blue-500/30 ring-2 ring-blue-400 shadow-lg' 
-          : 'bg-white/10 hover:bg-white/20'
+          : 'bg-white/15 hover:bg-white/25'
       }`}>
-        {getIconComponent()}
+        {getIconByName(icon.icon, 48)}
       </div>
       <div className={`mt-1 px-1.5 py-0.5 rounded text-xs font-medium text-center max-w-[68px] truncate transition-colors ${
         isSelected
           ? 'bg-blue-500 text-white'
-          : 'bg-black/40 text-white backdrop-blur-sm'
+          : 'bg-gray-700/70 text-white'
       }`}>
         {icon.name}
       </div>

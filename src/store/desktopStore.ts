@@ -50,31 +50,31 @@ interface DesktopStore {
 }
 
 const defaultApps: AppInfo[] = [
-  { id: 'explorer', name: '文件资源管理器', icon: 'FolderOpen', description: '浏览文件系统', category: 'system' },
-  { id: 'notepad', name: '记事本', icon: 'FileText', description: '简单文本编辑器', category: 'utility' },
-  { id: 'calculator', name: '计算器', icon: 'Calculator', description: '基本计算功能', category: 'utility' },
-  { id: 'terminal', name: '终端', icon: 'Terminal', description: '命令行界面', category: 'system' },
-  { id: 'settings', name: '设置', icon: 'Settings', description: '系统设置', category: 'system' },
-  { id: 'browser', name: '浏览器', icon: 'Globe', description: '网页浏览器', category: 'system' },
-  { id: 'music', name: '音乐', icon: 'Music', description: '音乐播放器', category: 'media' },
-  { id: 'photos', name: '照片', icon: 'Image', description: '图片查看器', category: 'media' },
+  { id: 'explorer', name: '文件资源管理器', icon: 'FolderOpenIcon', description: '浏览文件系统', category: 'system' },
+  { id: 'notepad', name: '记事本', icon: 'DocumentIcon', description: '简单文本编辑器', category: 'utility' },
+  { id: 'calculator', name: '计算器', icon: 'ExecutableIcon', description: '基本计算功能', category: 'utility' },
+  { id: 'terminal', name: '终端', icon: 'TerminalIcon', description: '命令行界面', category: 'system' },
+  { id: 'settings', name: '设置', icon: 'SettingsIcon', description: '系统设置', category: 'system' },
+  { id: 'browser', name: '浏览器', icon: 'BrowserIcon', description: '网页浏览器', category: 'system' },
+  { id: 'music', name: '音乐', icon: 'MusicIcon', description: '音乐播放器', category: 'media' },
+  { id: 'photos', name: '照片', icon: 'ImageIcon', description: '图片查看器', category: 'media' },
 ]
 
 const defaultDesktopIcons: DesktopIcon[] = [
-  { id: 'icon-1', name: '我的电脑', appId: 'explorer', icon: 'HardDrive', x: 20, y: 20 },
-  { id: 'icon-2', name: '回收站', appId: 'explorer', icon: 'Trash2', x: 20, y: 100 },
-  { id: 'icon-3', name: '文档', appId: 'explorer', icon: 'FolderOpen', x: 20, y: 180 },
-  { id: 'icon-4', name: '记事本', appId: 'notepad', icon: 'FileText', x: 20, y: 260 },
+  { id: 'icon-1', name: '我的电脑', appId: 'explorer', icon: 'HardDiskIcon', x: 20, y: 20 },
+  { id: 'icon-2', name: '回收站', appId: 'explorer', icon: 'RecycleIcon', x: 20, y: 100 },
+  { id: 'icon-3', name: '文档', appId: 'explorer', icon: 'FolderOpenIcon', x: 20, y: 180 },
+  { id: 'icon-4', name: '记事本', appId: 'notepad', icon: 'DocumentIcon', x: 20, y: 260 },
 ]
 
 const defaultFileSystem: FileItem[] = [
-  { id: 'f1', name: '文档', type: 'folder', modifiedAt: new Date(), icon: 'Folder', path: '/文档' },
-  { id: 'f2', name: '图片', type: 'folder', modifiedAt: new Date(), icon: 'Image', path: '/图片' },
-  { id: 'f3', name: '音乐', type: 'folder', modifiedAt: new Date(), icon: 'Music', path: '/音乐' },
-  { id: 'f4', name: '视频', type: 'folder', modifiedAt: new Date(), icon: 'Film', path: '/视频' },
-  { id: 'f5', name: '下载', type: 'folder', modifiedAt: new Date(), icon: 'Download', path: '/下载' },
-  { id: 'f6', name: 'readme.txt', type: 'file', size: 1024, modifiedAt: new Date(), icon: 'FileText', path: '/readme.txt' },
-  { id: 'f7', name: 'notes.txt', type: 'file', size: 512, modifiedAt: new Date(), icon: 'FileText', path: '/notes.txt' },
+  { id: 'f1', name: '文档', type: 'folder', modifiedAt: new Date(), icon: 'FolderIcon', path: '/文档' },
+  { id: 'f2', name: '图片', type: 'folder', modifiedAt: new Date(), icon: 'ImageIcon', path: '/图片' },
+  { id: 'f3', name: '音乐', type: 'folder', modifiedAt: new Date(), icon: 'MusicIcon', path: '/音乐' },
+  { id: 'f4', name: '视频', type: 'folder', modifiedAt: new Date(), icon: 'VideoIcon', path: '/视频' },
+  { id: 'f5', name: '下载', type: 'folder', modifiedAt: new Date(), icon: 'DownloadIcon', path: '/下载' },
+  { id: 'f6', name: 'readme.txt', type: 'file', size: 1024, modifiedAt: new Date(), icon: 'DocumentIcon', path: '/readme.txt' },
+  { id: 'f7', name: 'notes.txt', type: 'file', size: 512, modifiedAt: new Date(), icon: 'DocumentIcon', path: '/notes.txt' },
 ]
 
 const defaultSystemTrayItems: SystemTrayItem[] = [
@@ -329,7 +329,7 @@ export const useDesktopStore = create<DesktopStore>((set, get) => ({
             id: `icon-${Date.now()}`,
             name: params[0],
             appId: 'explorer',
-            icon: 'FolderOpen',
+            icon: 'FolderOpenIcon',
             x: 100 + Math.random() * 200,
             y: 100 + Math.random() * 200,
           }
@@ -343,7 +343,7 @@ export const useDesktopStore = create<DesktopStore>((set, get) => ({
             id: `icon-${Date.now()}`,
             name: params[0],
             appId: 'notepad',
-            icon: 'FileText',
+            icon: 'DocumentIcon',
             x: 100 + Math.random() * 200,
             y: 100 + Math.random() * 200,
           }
